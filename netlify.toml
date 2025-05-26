@@ -1,0 +1,22 @@
+[build]
+  command = "npm run build:frontend" # Ou o comando para buildar seu frontend
+  publish = "frontend/build"         # Pasta de publicação do frontend
+  functions = "netlify/functions"    # Pasta onde estão suas Netlify Functions (se usar)
+
+# Exemplo de como definir variáveis de ambiente para o contexto de build e functions
+[build.environment]
+  REACT_APP_API_BASE_URL = "https://sua-api.netlify.app" # Ou seu endpoint de produção
+  # GOOGLE_API_KEY = "SUA_CHAVE_GOOGLE_AQUI_PARA_BUILD_SE_NECESSARIO"
+  # SPREADSHEET_ID = "SEU_ID_PLANILHA_AQUI_PARA_BUILD_SE_NECESSARIO"
+
+# Variáveis para as Netlify Functions em runtime
+[functions]
+  # Se você tiver variáveis específicas para suas funções
+  # [functions.YOUR_FUNCTION_NAME]
+  #   NODE_VERSION = "18" # Especificar a versão do Node para as funções
+
+# Exemplo de redirect para SPA (Single Page Application)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

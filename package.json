@@ -1,0 +1,23 @@
+{
+  "name": "meu-projeto-raiz-para-netlify",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Projeto raiz para OportuniTech, incluindo frontend e backend/functions para Netlify.",
+  "scripts": {
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:backend": "echo \"Execute o backend/função separadamente ou configure um script específico\"",
+    "build:frontend": "npm run build --workspace=frontend",
+    "install:frontend": "npm install --workspace=frontend",
+    "install:backend-functions": "cd netlify/functions/api && npm install",
+    "install:all": "npm install && npm run install:frontend && npm run install:backend-functions"
+  },
+  "workspaces": [
+    "frontend",
+    "netlify/functions/api"
+  ],
+  "author": "Seu Nome <seu.email@exemplo.com>",
+  "license": "ISC",
+  "dependencies": {
+    "meu-projeto-raiz-para-netlify": "file:"
+  }
+}

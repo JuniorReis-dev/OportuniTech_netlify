@@ -1,0 +1,8 @@
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="40" cy="50" r="20" stroke="#A020F0" stroke-width="8" fill="none" />
+  {/* Usando --primary-accent-dark: #A020F0 como exemplo de cor */}
+
+  <line x1="60" y1="30" x2="60" y2="70" stroke="#40E0D0" stroke-width="8" stroke-linecap="round" />
+  {/* Usando --secondary-accent-dark: #40E0D0 como exemplo de cor */}
+  <line x1="45" y1="30" x2="75" y2="30" stroke="#40E0D0" stroke-width="8" stroke-linecap="round" />
+</svg>

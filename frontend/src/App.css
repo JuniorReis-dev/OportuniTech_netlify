@@ -1,0 +1,245 @@
+:root {
+  --font-family-main: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  --bg-color: #f4f7f9;
+  --text-color: #212529;
+  --surface-color: #ffffff;
+  --primary-accent: #007bff;
+  --secondary-accent: #6c757d;
+  --link-color: #0069d9;
+  --border-color: #dee2e6;
+  --text-muted: #6c757d;
+  --text-on-primary: #ffffff;
+  --input-bg: #ffffff;
+  --input-focus-border: #80bdff;
+  --input-focus-shadow: rgba(0, 123, 255, 0.25);
+  --card-shadow-color: rgba(0, 0, 0, 0.08);
+  --card-hover-shadow-color: rgba(0, 0, 0, 0.12);
+  --button-shadow-color: rgba(0, 0, 0, 0.1);
+  --error-text: #721c24;
+  --error-background: #f8d7da;
+  --error-border: #f5c6cb;
+}
+
+body.dark-mode {
+  --bg-color: #1a1d24;
+  --text-color: #e4e6eb;
+  --surface-color: #242831;
+  --primary-accent: #a020f0;
+  --secondary-accent: #40e0d0;
+  --link-color: var(--secondary-accent);
+  --border-color: #3a3f4c;
+  --text-muted: #adb5bd;
+  --text-on-primary: #ffffff;
+  --input-bg: #2c3038;
+  --input-focus-border: var(--primary-accent);
+  --input-focus-shadow: rgba(160, 32, 240, 0.25);
+  --card-shadow-color: rgba(0, 0, 0, 0.25);
+  --card-hover-shadow-color: rgba(0, 0, 0, 0.35);
+  --button-shadow-color: rgba(0, 0, 0, 0.2);
+  --error-text: #f8d7da;
+  --error-background: #3e2123;
+  --error-border: #721c24;
+}
+
+body {
+  font-family: var(--font-family-main);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  margin: 0;
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+.App {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.App h1 {
+  color: var(--primary-accent);
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 30px;
+  font-size: 2.2em;
+}
+
+.filtros {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  margin-bottom: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px var(--card-shadow-color);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 15px;
+}
+
+.filtros input[type="text"] {
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  font-size: 0.95em;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.filtros input[type="text"]:focus {
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 0.2rem var(--input-focus-shadow);
+  outline: none;
+}
+
+.filtros input[type="text"]::placeholder {
+  color: var(--text-muted);
+}
+
+.primary-action-button {
+  padding: 10px 20px;
+  font-size: 1em;
+  font-weight: bold;
+  background-color: var(--primary-accent);
+  color: var(--text-on-primary);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease,
+    box-shadow 0.2s ease, filter 0.2s ease;
+  box-shadow: 0 2px 3px var(--button-shadow-color);
+}
+
+.primary-action-button:hover,
+.primary-action-button:focus-visible {
+  filter: brightness(110%);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 5px var(--button-shadow-color);
+  outline: none;
+}
+
+body.dark-mode .primary-action-button:hover,
+body.dark-mode .primary-action-button:focus-visible {
+  filter: brightness(120%);
+}
+
+.primary-action-button:active {
+  transform: translateY(0px);
+  filter: brightness(90%);
+}
+
+.filtros-atualizar-btn {
+  /* Estilo para o botão de atualizar nos filtros */
+  grid-column: 1 / -1;
+  justify-self: center;
+  margin-top: 10px;
+}
+
+.lista-estagios {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 25px;
+}
+
+.estagio-card {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 3px 6px var(--card-shadow-color);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  min-height: 250px;
+}
+
+.estagio-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 5px 10px var(--card-hover-shadow-color);
+}
+
+.estagio-card h2 {
+  font-size: 1.4em;
+  color: var(--primary-accent);
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.estagio-card p {
+  margin-bottom: 8px;
+  font-size: 0.95em;
+  line-height: 1.5;
+  color: var(--text-color);
+}
+
+.estagio-card p strong {
+  font-weight: 600;
+}
+
+.ver-vaga-button {
+  background-color: var(--primary-accent);
+  color: var(--text-on-primary);
+  border: none;
+  border-radius: 4px;
+  padding: 8px 15px;
+  font-size: 0.9em;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease,
+    box-shadow 0.2s ease, filter 0.2s ease;
+  box-shadow: 0 1px 2px var(--button-shadow-color);
+  margin-top: auto;
+}
+
+.ver-vaga-button:hover,
+.ver-vaga-button:focus-visible {
+  filter: brightness(110%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px var(--button-shadow-color);
+  outline: none;
+}
+
+body.dark-mode .ver-vaga-button:hover,
+body.dark-mode .ver-vaga-button:focus-visible {
+  filter: brightness(120%);
+}
+
+.ver-vaga-button:active {
+  transform: translateY(0px);
+  filter: brightness(90%);
+}
+
+.mensagem-carregando,
+.mensagem-nenhuma-vaga {
+  color: var(--text-muted);
+  font-size: 1.1em;
+  text-align: center;
+  padding: 30px;
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mensagem-erro {
+  color: var(--error-text);
+  background-color: var(--error-background);
+  border: 1px solid var(--error-border);
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 1em;
+  margin: 20px auto;
+  max-width: 800px;
+}

@@ -166,5 +166,6 @@ if (require.main === module && process.env.NODE_ENV !== 'test_netlify_function')
     console.log(`[Server] Backend rodando em http://localhost:${port}`);
   });
 }
-
+const serverless = require('serverless-http');
+// ... seu código Express (app) ...
 module.exports.handler = serverless(app);

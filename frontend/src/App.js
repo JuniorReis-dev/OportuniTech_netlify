@@ -10,8 +10,8 @@ import { gsap } from "gsap";
 import Navbar from "./components/Navbar/Navbar";
 
 const API_BASE_URL =
-  process.env.REACT_APP_API_BASE_URL || "http://localhost:3001";
-const API_URL = `${API_BASE_URL}/api/estagios`;
+  process.env.REACT_APP_API_BASE_URL || "/.netlify/functions/api";
+const API_URL = `${API_BASE_URL}/estagios`; // Se sua rota no Express for /estagios
 const REFETCH_INTERVAL_MS = 5 * 60 * 1000;
 
 const parseDateString = (dateString) => {

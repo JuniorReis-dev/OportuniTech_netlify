@@ -6,15 +6,12 @@ const cors = require("cors");
 const serverless = require("serverless-http");
 
 const app = express();
-// A variável 'port' é usada principalmente para desenvolvimento local, não será usada pela Netlify Function.
-// const port = process.env.PORT || 3001; 
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
 app.use(cors());
 app.use(express.json());
 
-// Middleware para Logar Detalhes da Requisição - ADICIONADO AQUI!
 app.use((req, res, next) => {
   console.log('--- INÍCIO DA REQUISIÇÃO NA FUNÇÃO API ---');
   console.log('[API Function Log] Timestamp:', new Date().toISOString());
@@ -29,6 +26,7 @@ app.use((req, res, next) => {
   next();
 });
 
+// ... (suas funções getRelevantSheetFilterDates, getSheetTitles, etc. permanecem aqui) ...
 function getRelevantSheetFilterDates() {
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -97,8 +95,10 @@ function parseSheetData(sheetData) {
     .filter((item) => Object.values(item).some((val) => val && String(val).trim() !== ""));
 }
 
-app.get("/estagios", async (req, res) => {
-  console.log("[API Function /estagios] Rota acessada."); // Log específico da rota
+
+// ALTERAÇÃO PRINCIPAL AQUI:
+app.get("/.netlify/functions/api/estagios", async (req, res) => {
+  console.log("[API Function /estagios] Rota acessada com caminho completo.");
   if (!GOOGLE_API_KEY) {
     console.error("[API Function /estagios] GOOGLE_API_KEY não definida!");
     return res.status(500).json({ error: "Configuração do servidor: Chave da API Google ausente." });
@@ -157,8 +157,4 @@ app.use((err, req, res, next) => {
   }
 });
 
-// O bloco if (require.main === module) não é necessário para Netlify Functions
-// e pode ser removido ou mantido para desenvolvimento local direto do arquivo,
-// mas o serverless(app) já cuida de não iniciar o listen().
-// Para Netlify, a linha abaixo é a mais importante:
 module.exports.handler = serverless(app);

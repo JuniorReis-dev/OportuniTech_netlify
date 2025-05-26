@@ -22,7 +22,7 @@ const parseDateString = (dateString) => {
     dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)
   ) {
     const parts = dateString.split("/");
-    return new Date(`<span class="math-inline">\{parts\[2\]\}\-</span>{parts[1]}-${parts[0]}`);
+    return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
   }
   return new Date(0);
 };
@@ -203,9 +203,7 @@ function App() {
             key={estagio.link || `estagio-${index}`} // CORRIGIDO
             className="estagio-card"
           >
-            <h2>
-              {estagio.titulo_da_vaga || "Título não disponível"} 
-            </h2>
+            <h2>{estagio.titulo_da_vaga || "Título não disponível"}</h2>
             <p>
               <strong>Empresa:</strong> {estagio.empresa || "Não informado"}
             </p>
@@ -231,8 +229,9 @@ function App() {
               <button
                 type="button"
                 className="ver-vaga-button"
-                onClick={() =>
-                  window.open(estagio.link, "_blank", "noopener,noreferrer") // CORRIGIDO
+                onClick={
+                  () =>
+                    window.open(estagio.link, "_blank", "noopener,noreferrer") // CORRIGIDO
                 }
               >
                 Ver Vaga
@@ -268,3 +267,45 @@ function App() {
             value={filtroEmpresa}
             onChange={(e) => setFiltroEmpresa(e.target.value)}
           />
+          <input
+            type="text"
+            placeholder="Cidade (Ex: São Paulo)"
+            value={filtroCidade}
+            onChange={(e) => setFiltroCidade(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Título da Vaga"
+            value={filtroTituloVaga}
+            onChange={(e) => setFiltroTituloVaga(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Tipo (Ex: Estágio)"
+            value={filtroTipoVaga}
+            onChange={(e) => setFiltroTipoVaga(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Plataforma"
+            value={filtroPlataforma}
+            onChange={(e) => setFiltroPlataforma(e.target.value)}
+          />
+          <button
+            type="button"
+            onClick={fetchEstagios}
+            className="primary-action-button filtros-atualizar-btn"
+            disabled={loading && estagios.length > 0}
+          >
+            {loading && estagios.length > 0
+              ? "Atualizando..."
+              : "Atualizar Vagas"}
+          </button>
+        </div>
+        {renderConteudoPrincipal()}
+      </div>
+    </>
+  );
+}
+
+export default App;

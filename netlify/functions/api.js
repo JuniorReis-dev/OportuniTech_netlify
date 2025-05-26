@@ -12,6 +12,7 @@ const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 app.use(cors());
 app.use(express.json());
 
+// Middleware para Logar Detalhes da Requisição
 app.use((req, res, next) => {
   console.log('--- INÍCIO DA REQUISIÇÃO NA FUNÇÃO API ---');
   console.log('[API Function Log] Timestamp:', new Date().toISOString());
@@ -20,13 +21,10 @@ app.use((req, res, next) => {
   console.log('[API Function Log] req.originalUrl:', req.originalUrl);
   console.log('[API Function Log] req.baseUrl:', req.baseUrl);
   console.log('[API Function Log] req.query:', req.query);
-  console.log('[API Function Log] req.headers["x-forwarded-for"] (IP do Cliente):', req.headers["x-forwarded-for"]);
-  console.log('[API Function Log] req.headers["client-ip"] (IP do Cliente Netlify):', req.headers["client-ip"]);
   console.log('--- FIM DO LOG DA REQUISIÇÃO ---');
   next();
 });
 
-// ... (suas funções getRelevantSheetFilterDates, getSheetTitles, etc. permanecem aqui) ...
 function getRelevantSheetFilterDates() {
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -67,11 +65,13 @@ function filterAndSortSheetNames(sheetNames, dateRange) {
     });
 }
 
-function parseSheetData(sheetData) {
-  if (!sheetData?.sheets?.[0]?.data?.[0]?.rowData) {
+function parseSheetData(sheetDataFromSingleRange) {
+  // Ajustado para receber o objeto 'data' de um único range/aba do resultado do batchGet
+  // A estrutura esperada é sheetDataFromSingleRange = { data: [ { rowData: ... } ] }
+  if (!sheetDataFromSingleRange?.data?.[0]?.rowData) {
     return [];
   }
-  const rows = sheetData.sheets[0].data[0].rowData;
+  const rows = sheetDataFromSingleRange.data[0].rowData;
   if (rows.length <= 1) return [];
 
   const headers = rows[0].values
@@ -95,8 +95,9 @@ function parseSheetData(sheetData) {
     .filter((item) => Object.values(item).some((val) => val && String(val).trim() !== ""));
 }
 
-
-// ALTERAÇÃO PRINCIPAL AQUI:
+// Rota principal da API de estágios
+// O frontend chamará '/.netlify/functions/api/estagios'
+// E o req.path aqui dentro será '/.netlify/functions/api/estagios' (baseado nos seus logs)
 app.get("/.netlify/functions/api/estagios", async (req, res) => {
   console.log("[API Function /estagios] Rota acessada com caminho completo.");
   if (!GOOGLE_API_KEY) {
@@ -115,26 +116,39 @@ app.get("/.netlify/functions/api/estagios", async (req, res) => {
     const relevantSheetNames = filterAndSortSheetNames(allSheetNames, dateRange);
 
     if (relevantSheetNames.length === 0) {
-      console.log(`[API Function /estagios] Nenhuma aba relevante encontrada para as datas: ${dateRange.startDate.toLocaleDateString()} - ${dateRange.endDate.toLocaleDateString()}`);
+      console.log(`[API Function /estagios] Nenhuma aba relevante encontrada.`);
       return res.status(404).json({ message: "Nenhum estágio encontrado nas abas dos últimos 3 meses." });
     }
-    console.log(`[API Function /estagios] Abas relevantes: ${relevantSheetNames.join(", ")}`);
+    console.log(`[API Function /estagios] Abas relevantes para buscar: ${relevantSheetNames.join(", ")}`);
 
+    // OTIMIZAÇÃO: Define o range de colunas aqui (ex: A:G se só precisar até a coluna G)
+    const columnRange = "A:G"; // AJUSTE CONFORME NECESSÁRIO (A:Z é o máximo)
+    const rangesToFetch = relevantSheetNames.map(sheetName => `${sheetName}!${columnRange}`);
     let allEstagios = [];
-    for (const sheetName of relevantSheetNames) {
-      const range = `${sheetName}!A:Z`;
-      console.log(`[API Function /estagios] Buscando dados da aba "${sheetName}"`);
-      const response = await sheets.spreadsheets.get({
+
+    if (rangesToFetch.length > 0) {
+      console.log(`[API Function /estagios] Buscando dados para ${rangesToFetch.length} abas em uma chamada.`);
+
+      const batchGetResponse = await sheets.spreadsheets.get({
         spreadsheetId: SPREADSHEET_ID,
-        ranges: [range],
-        fields: "sheets.data.rowData.values.hyperlink,sheets.data.rowData.values.formattedValue",
+        ranges: rangesToFetch,
+        fields: "sheets.data.rowData.values.hyperlink,sheets.data.rowData.values.formattedValue,sheets.properties.title", // Adicionado title para log
       });
-      const estagiosFromSheet = parseSheetData(response.data);
-      if (estagiosFromSheet.length > 0) {
-        console.log(`[API Function /estagios] Processados ${estagiosFromSheet.length} estágios da aba "${sheetName}".`);
-        allEstagios = allEstagios.concat(estagiosFromSheet);
-      } else {
-        console.log(`[API Function /estagios] Nenhum dado válido processado da aba "${sheetName}".`);
+
+      if (batchGetResponse.data && batchGetResponse.data.sheets) {
+        for (const singleSheetResult of batchGetResponse.data.sheets) {
+          // O 'singleSheetResult' já tem a estrutura { properties: { title: ... }, data: [ { rowData: ... } ] }
+          // A função parseSheetData foi ajustada para esperar apenas a parte 'data' de uma aba.
+          const sheetTitle = singleSheetResult.properties?.title || "Aba Desconhecida";
+          const estagiosFromSheet = parseSheetData(singleSheetResult); // Passa o resultado direto da aba
+
+          if (estagiosFromSheet.length > 0) {
+            console.log(`[API Function /estagios] Processados ${estagiosFromSheet.length} estágios da aba "${sheetTitle}".`);
+            allEstagios = allEstagios.concat(estagiosFromSheet);
+          } else {
+            console.log(`[API Function /estagios] Nenhum dado válido processado da aba "${sheetTitle}".`);
+          }
+        }
       }
     }
 
@@ -142,19 +156,23 @@ app.get("/.netlify/functions/api/estagios", async (req, res) => {
       console.log("[API Function /estagios] Nenhum estágio encontrado após processar todas as abas relevantes.");
       return res.status(404).json({ message: "Nenhum estágio encontrado após processar todas as abas relevantes." });
     }
+
     console.log(`[API Function /estagios] Total de ${allEstagios.length} estágios. Enviando.`);
     res.json(allEstagios);
+
   } catch (error) {
-    console.error("[API Function /estagios] ERRO:", error.message, error.stack);
+    console.error("[API Function /estagios] ERRO:", error.message, error.stack ? error.stack.split('\n') : 'Sem stack trace');
     res.status(500).json({ error: "Erro interno ao buscar dados da planilha.", details: error.message });
   }
 });
 
+// Middleware de tratamento de erro geral (deve ser o último)
 app.use((err, req, res, next) => {
-  console.error("[API Function] ERRO NÃO TRATADO:", err.message, err.stack);
+  console.error("[API Function] ERRO NÃO TRATADO:", err.message, err.stack ? err.stack.split('\n') : 'Sem stack trace');
   if (!res.headersSent) {
     res.status(500).send("Erro Interno no Servidor da Função.");
   }
 });
 
+// Exporta o handler para Netlify Functions
 module.exports.handler = serverless(app);

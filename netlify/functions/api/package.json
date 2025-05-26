@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "Backend API para OportuniTech (servidor ou Netlify Function)",
-  "main": "server.js",
+  "main": "server.js", // Isso indica que seu arquivo principal se chama server.js nesta pasta
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
@@ -27,7 +27,7 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "dependencies": {
+  "dependencies": { // CORRIGIDO - Sem a auto-dependência
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^4.19.2",

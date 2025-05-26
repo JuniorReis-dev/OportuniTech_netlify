@@ -214,46 +214,58 @@ function App() {
     }
     return (
       <div className="lista-estagios" ref={listRef}>
-        {estagiosFiltrados.map((estagio, index) => (
-          <div
-            key={estagio.link || `estagio-${index}`}
-            className="estagio-card"
-          >
-            <h2>{estagio.titulo_da_vaga || "Título não disponível"}</h2>
-            <p>
-              <strong>Empresa:</strong> {estagio.empresa || "Não informado"}
-            </p>
-            <p>
-              <strong>Localização:</strong> {estagio.cidade || "Não informado"}
-            </p>
-            <p>
-              <strong>Área:</strong> {estagio.area || "Não informado"}
-            </p>
-            <p>
-              <strong>Tipo de Vaga:</strong>{" "}
-              {estagio.tipo_de_vaga || "Não informado"}
-            </p>
-            <p>
-              <strong>Plataforma:</strong>{" "}
-              {estagio.plataforma || "Não informado"}
-            </p>
-            <p>
-              <strong>Data de Inclusão:</strong>{" "}
-              {estagio.data_de_incluso || "Não informado"}
-            </p>
-            {estagio.link && (
-              <button
-                type="button"
-                className="ver-vaga-button"
-                onClick={() =>
-                  window.open(estagio.link, "_blank", "noopener,noreferrer")
-                }
-              >
-                Ver Vaga
-              </button>
-            )}
-          </div>
-        ))}
+        {estagiosFiltrados.map((estagio, index) => {
+          // ADICIONADO: Log para cada objeto estágio que está sendo renderizado
+          if (index < 3) {
+            // Loga apenas os 3 primeiros para não poluir muito o console
+            console.log(
+              `[App.js] Dados do Estágio ${index}:`,
+              JSON.stringify(estagio, null, 2)
+            );
+          }
+
+          return (
+            <div
+              key={estagio.link || `estagio-${index}`}
+              className="estagio-card"
+            >
+              <h2>{estagio.titulo_da_vaga || "Título não disponível"}</h2>
+              <p>
+                <strong>Empresa:</strong> {estagio.empresa || "Não informado"}
+              </p>
+              <p>
+                <strong>Localização:</strong>{" "}
+                {estagio.cidade || "Não informado"}
+              </p>
+              <p>
+                <strong>Área:</strong> {estagio.area || "Não informado"}
+              </p>
+              <p>
+                <strong>Tipo de Vaga:</strong>{" "}
+                {estagio.tipo_de_vaga || "Não informado"}
+              </p>
+              <p>
+                <strong>Plataforma:</strong>{" "}
+                {estagio.plataforma || "Não informado"}
+              </p>
+              <p>
+                <strong>Data de Inclusão:</strong>{" "}
+                {estagio.data_de_incluso || "Não informado"}
+              </p>
+              {estagio.link && (
+                <button
+                  type="button"
+                  className="ver-vaga-button"
+                  onClick={() =>
+                    window.open(estagio.link, "_blank", "noopener,noreferrer")
+                  }
+                >
+                  Ver Vaga
+                </button>
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   };

@@ -6,12 +6,28 @@ const cors = require("cors");
 const serverless = require("serverless-http");
 
 const app = express();
-const port = process.env.PORT || 3001; // Usado para desenvolvimento local
+// A variável 'port' é usada principalmente para desenvolvimento local, não será usada pela Netlify Function.
+// const port = process.env.PORT || 3001; 
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
 app.use(cors());
 app.use(express.json());
+
+// Middleware para Logar Detalhes da Requisição - ADICIONADO AQUI!
+app.use((req, res, next) => {
+  console.log('--- INÍCIO DA REQUISIÇÃO NA FUNÇÃO API ---');
+  console.log('[API Function Log] Timestamp:', new Date().toISOString());
+  console.log('[API Function Log] Método da Requisição:', req.method);
+  console.log('[API Function Log] req.path:', req.path);
+  console.log('[API Function Log] req.originalUrl:', req.originalUrl);
+  console.log('[API Function Log] req.baseUrl:', req.baseUrl);
+  console.log('[API Function Log] req.query:', req.query);
+  console.log('[API Function Log] req.headers["x-forwarded-for"] (IP do Cliente):', req.headers["x-forwarded-for"]);
+  console.log('[API Function Log] req.headers["client-ip"] (IP do Cliente Netlify):', req.headers["client-ip"]);
+  console.log('--- FIM DO LOG DA REQUISIÇÃO ---');
+  next();
+});
 
 function getRelevantSheetFilterDates() {
   const now = new Date();
@@ -81,16 +97,14 @@ function parseSheetData(sheetData) {
     .filter((item) => Object.values(item).some((val) => val && String(val).trim() !== ""));
 }
 
-// Rota principal da API de estágios
-// Se sua Netlify Function se chamar 'api' (ex: netlify/functions/api.js),
-// o frontend chamará '/.netlify/functions/api/estagios'
 app.get("/estagios", async (req, res) => {
+  console.log("[API Function /estagios] Rota acessada."); // Log específico da rota
   if (!GOOGLE_API_KEY) {
-    console.error("[API] GOOGLE_API_KEY não definida!");
+    console.error("[API Function /estagios] GOOGLE_API_KEY não definida!");
     return res.status(500).json({ error: "Configuração do servidor: Chave da API Google ausente." });
   }
   if (!SPREADSHEET_ID) {
-    console.error("[API] SPREADSHEET_ID não definido!");
+    console.error("[API Function /estagios] SPREADSHEET_ID não definido!");
     return res.status(500).json({ error: "Configuração do servidor: ID da planilha ausente." });
   }
 
@@ -101,15 +115,15 @@ app.get("/estagios", async (req, res) => {
     const relevantSheetNames = filterAndSortSheetNames(allSheetNames, dateRange);
 
     if (relevantSheetNames.length === 0) {
-      console.log(`[API] Nenhuma aba relevante encontrada para as datas: ${dateRange.startDate.toLocaleDateString()} - ${dateRange.endDate.toLocaleDateString()}`);
+      console.log(`[API Function /estagios] Nenhuma aba relevante encontrada para as datas: ${dateRange.startDate.toLocaleDateString()} - ${dateRange.endDate.toLocaleDateString()}`);
       return res.status(404).json({ message: "Nenhum estágio encontrado nas abas dos últimos 3 meses." });
     }
-    console.log(`[API] Abas relevantes: ${relevantSheetNames.join(", ")}`);
+    console.log(`[API Function /estagios] Abas relevantes: ${relevantSheetNames.join(", ")}`);
 
     let allEstagios = [];
     for (const sheetName of relevantSheetNames) {
       const range = `${sheetName}!A:Z`;
-      console.log(`[API] Buscando dados da aba "${sheetName}"`);
+      console.log(`[API Function /estagios] Buscando dados da aba "${sheetName}"`);
       const response = await sheets.spreadsheets.get({
         spreadsheetId: SPREADSHEET_ID,
         ranges: [range],
@@ -117,40 +131,34 @@ app.get("/estagios", async (req, res) => {
       });
       const estagiosFromSheet = parseSheetData(response.data);
       if (estagiosFromSheet.length > 0) {
-        console.log(`[API] Processados ${estagiosFromSheet.length} estágios da aba "${sheetName}".`);
+        console.log(`[API Function /estagios] Processados ${estagiosFromSheet.length} estágios da aba "${sheetName}".`);
         allEstagios = allEstagios.concat(estagiosFromSheet);
       } else {
-        console.log(`[API] Nenhum dado válido processado da aba "${sheetName}".`);
+        console.log(`[API Function /estagios] Nenhum dado válido processado da aba "${sheetName}".`);
       }
     }
 
     if (allEstagios.length === 0) {
-      console.log("[API] Nenhum estágio encontrado após processar todas as abas relevantes.");
+      console.log("[API Function /estagios] Nenhum estágio encontrado após processar todas as abas relevantes.");
       return res.status(404).json({ message: "Nenhum estágio encontrado após processar todas as abas relevantes." });
     }
-    console.log(`[API] Total de ${allEstagios.length} estágios. Enviando.`);
+    console.log(`[API Function /estagios] Total de ${allEstagios.length} estágios. Enviando.`);
     res.json(allEstagios);
   } catch (error) {
-    console.error("[API] ERRO:", error.message, error.stack);
+    console.error("[API Function /estagios] ERRO:", error.message, error.stack);
     res.status(500).json({ error: "Erro interno ao buscar dados da planilha.", details: error.message });
   }
 });
 
-// Middleware de tratamento de erro geral (deve ser o último)
 app.use((err, req, res, next) => {
-  console.error("[Server] ERRO NÃO TRATADO:", err.message, err.stack);
+  console.error("[API Function] ERRO NÃO TRATADO:", err.message, err.stack);
   if (!res.headersSent) {
-    res.status(500).send("Erro Interno no Servidor.");
+    res.status(500).send("Erro Interno no Servidor da Função.");
   }
 });
 
-// Para rodar localmente (ex: node server.js)
-if (require.main === module && process.env.NODE_ENV !== 'test_netlify_function') {
-  app.listen(port, () => {
-    console.log(`[Server] Backend para desenvolvimento local rodando em http://localhost:${port}`);
-    console.log(`[Server] Endpoint de estágios local: http://localhost:${port}/estagios`);
-  });
-}
-
-// Exporta o handler para Netlify Functions
+// O bloco if (require.main === module) não é necessário para Netlify Functions
+// e pode ser removido ou mantido para desenvolvimento local direto do arquivo,
+// mas o serverless(app) já cuida de não iniciar o listen().
+// Para Netlify, a linha abaixo é a mais importante:
 module.exports.handler = serverless(app);

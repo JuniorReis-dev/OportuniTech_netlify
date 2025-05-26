@@ -3,28 +3,15 @@ require("dotenv").config();
 const express = require("express");
 const { google } = require("googleapis");
 const cors = require("cors");
-const path = require("path");
-const fs = require("fs");
-const serverless = require("serverless-http"); // Necessário para Netlify Functions
+const serverless = require("serverless-http");
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3001; // Usado para desenvolvimento local
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID;
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
 app.use(cors());
 app.use(express.json());
-
-const frontendBuildPath = path.resolve(__dirname, "../../frontend/build"); // Caminho relativo à função
-let frontendAvailable = false;
-
-if (fs.existsSync(frontendBuildPath)) {
-  app.use(express.static(frontendBuildPath));
-  frontendAvailable = true;
-  console.log(`[Server] Servindo arquivos estáticos de: ${frontendBuildPath}`);
-} else {
-  console.warn(`[Server] AVISO: Pasta de build do frontend NÃO ENCONTRADA em ${frontendBuildPath}.`);
-}
 
 function getRelevantSheetFilterDates() {
   const now = new Date();
@@ -94,7 +81,10 @@ function parseSheetData(sheetData) {
     .filter((item) => Object.values(item).some((val) => val && String(val).trim() !== ""));
 }
 
-app.get("/api/estagios", async (req, res) => {
+// Rota principal da API de estágios
+// Se sua Netlify Function se chamar 'api' (ex: netlify/functions/api.js),
+// o frontend chamará '/.netlify/functions/api/estagios'
+app.get("/estagios", async (req, res) => {
   if (!GOOGLE_API_KEY) {
     console.error("[API] GOOGLE_API_KEY não definida!");
     return res.status(500).json({ error: "Configuração do servidor: Chave da API Google ausente." });
@@ -111,48 +101,42 @@ app.get("/api/estagios", async (req, res) => {
     const relevantSheetNames = filterAndSortSheetNames(allSheetNames, dateRange);
 
     if (relevantSheetNames.length === 0) {
-      return res.status(404).json({ message: "Nenhum estágio nas abas dos últimos 3 meses." });
+      console.log(`[API] Nenhuma aba relevante encontrada para as datas: ${dateRange.startDate.toLocaleDateString()} - ${dateRange.endDate.toLocaleDateString()}`);
+      return res.status(404).json({ message: "Nenhum estágio encontrado nas abas dos últimos 3 meses." });
     }
     console.log(`[API] Abas relevantes: ${relevantSheetNames.join(", ")}`);
 
     let allEstagios = [];
     for (const sheetName of relevantSheetNames) {
       const range = `${sheetName}!A:Z`;
+      console.log(`[API] Buscando dados da aba "${sheetName}"`);
       const response = await sheets.spreadsheets.get({
         spreadsheetId: SPREADSHEET_ID,
         ranges: [range],
         fields: "sheets.data.rowData.values.hyperlink,sheets.data.rowData.values.formattedValue",
       });
       const estagiosFromSheet = parseSheetData(response.data);
-      allEstagios = allEstagios.concat(estagiosFromSheet);
+      if (estagiosFromSheet.length > 0) {
+        console.log(`[API] Processados ${estagiosFromSheet.length} estágios da aba "${sheetName}".`);
+        allEstagios = allEstagios.concat(estagiosFromSheet);
+      } else {
+        console.log(`[API] Nenhum dado válido processado da aba "${sheetName}".`);
+      }
     }
 
     if (allEstagios.length === 0) {
-      return res.status(404).json({ message: "Nenhum estágio encontrado após processar abas." });
+      console.log("[API] Nenhum estágio encontrado após processar todas as abas relevantes.");
+      return res.status(404).json({ message: "Nenhum estágio encontrado após processar todas as abas relevantes." });
     }
+    console.log(`[API] Total de ${allEstagios.length} estágios. Enviando.`);
     res.json(allEstagios);
   } catch (error) {
     console.error("[API] ERRO:", error.message, error.stack);
-    res.status(500).json({ error: "Erro interno ao buscar dados.", details: error.message });
+    res.status(500).json({ error: "Erro interno ao buscar dados da planilha.", details: error.message });
   }
 });
 
-if (frontendAvailable) {
-  app.get("*", (req, res) => {
-    const indexPath = path.join(frontendBuildPath, "index.html");
-    fs.access(indexPath, fs.constants.F_OK, (errAccess) => {
-      if (errAccess) {
-        return res.status(404).send("Arquivo principal não encontrado.");
-      }
-      res.sendFile(indexPath, (errSendFile) => {
-        if (errSendFile && !res.headersSent) {
-          res.status(500).send("Erro ao enviar arquivo principal.");
-        }
-      });
-    });
-  });
-}
-
+// Middleware de tratamento de erro geral (deve ser o último)
 app.use((err, req, res, next) => {
   console.error("[Server] ERRO NÃO TRATADO:", err.message, err.stack);
   if (!res.headersSent) {
@@ -160,12 +144,13 @@ app.use((err, req, res, next) => {
   }
 });
 
-
+// Para rodar localmente (ex: node server.js)
 if (require.main === module && process.env.NODE_ENV !== 'test_netlify_function') {
   app.listen(port, () => {
-    console.log(`[Server] Backend rodando em http://localhost:${port}`);
+    console.log(`[Server] Backend para desenvolvimento local rodando em http://localhost:${port}`);
+    console.log(`[Server] Endpoint de estágios local: http://localhost:${port}/estagios`);
   });
 }
-const serverless = require('serverless-http');
-// ... seu código Express (app) ...
+
+// Exporta o handler para Netlify Functions
 module.exports.handler = serverless(app);

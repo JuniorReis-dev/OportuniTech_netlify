@@ -87,8 +87,8 @@ function App() {
       }
       const data = await response.json();
       const sortedData = data.sort((a, b) => {
-        const dateA = parseDateString(a.data_de_incluso); // CORRIGIDO para chave do backend
-        const dateB = parseDateString(b.data_de_incluso); // CORRIGIDO para chave do backend
+        const dateA = parseDateString(a.data_de_incluso); // CORRIGIDO
+        const dateB = parseDateString(b.data_de_incluso); // CORRIGIDO
         return dateB.getTime() - dateA.getTime();
       });
       setEstagios(sortedData);

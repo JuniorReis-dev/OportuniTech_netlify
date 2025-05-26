@@ -87,8 +87,8 @@ function App() {
       }
       const data = await response.json();
       const sortedData = data.sort((a, b) => {
-        const dateA = parseDateString(a.data_de_incluso); // CORRIGIDO
-        const dateB = parseDateString(b.data_de_incluso); // CORRIGIDO
+        const dateA = parseDateString(a.data_de_incluso);
+        const dateB = parseDateString(b.data_de_incluso);
         return dateB.getTime() - dateA.getTime();
       });
       setEstagios(sortedData);
@@ -104,16 +104,32 @@ function App() {
 
   const estagiosFiltrados = useMemo(() => {
     return estagios.filter((estagio) => {
-      const dataInclusao = String(estagio.data_de_incluso || "").toLowerCase(); // CORRIGIDO
-      const area = String(estagio.area || "").toLowerCase(); // CORRIGIDO
-      const empresa = String(estagio.empresa || "").toLowerCase(); // CORRIGIDO
-      const cidade = String(estagio.cidade || "").toLowerCase(); // CORRIGIDO
-      const tituloVaga = String(estagio.titulo_da_vaga || "").toLowerCase(); // CORRIGIDO
-      const tipoVaga = String(estagio.tipo_de_vaga || "").toLowerCase(); // CORRIGIDO
-      const plataforma = String(estagio.plataforma || "").toLowerCase(); // CORRIGIDO
+      const dataInclusao = String(estagio.data_de_incluso || "")
+        .trim()
+        .toLowerCase();
+      const area = String(estagio.area || "")
+        .trim()
+        .toLowerCase();
+      const empresa = String(estagio.empresa || "")
+        .trim()
+        .toLowerCase();
+      const cidade = String(estagio.cidade || "")
+        .trim()
+        .toLowerCase();
+      const tituloVaga = String(estagio.titulo_da_vaga || "")
+        .trim()
+        .toLowerCase();
+      const tipoVaga = String(estagio.tipo_de_vaga || "")
+        .trim()
+        .toLowerCase();
+      const plataforma = String(estagio.plataforma || "")
+        .trim()
+        .toLowerCase();
 
-      const checkFilter = (value, filter) =>
-        !filter || value.includes(filter.toLowerCase());
+      const checkFilter = (value, filterTerm) => {
+        if (!filterTerm) return true;
+        return value.includes(filterTerm.trim().toLowerCase());
+      };
 
       return (
         checkFilter(dataInclusao, filtroDataInclusao) &&
@@ -200,7 +216,7 @@ function App() {
       <div className="lista-estagios" ref={listRef}>
         {estagiosFiltrados.map((estagio, index) => (
           <div
-            key={estagio.link || `estagio-${index}`} // CORRIGIDO
+            key={estagio.link || `estagio-${index}`}
             className="estagio-card"
           >
             <h2>{estagio.titulo_da_vaga || "Título não disponível"}</h2>
@@ -225,13 +241,12 @@ function App() {
               <strong>Data de Inclusão:</strong>{" "}
               {estagio.data_de_incluso || "Não informado"}
             </p>
-            {estagio.link && ( // CORRIGIDO
+            {estagio.link && (
               <button
                 type="button"
                 className="ver-vaga-button"
-                onClick={
-                  () =>
-                    window.open(estagio.link, "_blank", "noopener,noreferrer") // CORRIGIDO
+                onClick={() =>
+                  window.open(estagio.link, "_blank", "noopener,noreferrer")
                 }
               >
                 Ver Vaga

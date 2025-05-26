@@ -22,7 +22,7 @@ const parseDateString = (dateString) => {
     dateString.match(/^\d{2}\/\d{2}\/\d{4}$/)
   ) {
     const parts = dateString.split("/");
-    return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+    return new Date(`<span class="math-inline">\{parts\[2\]\}\-</span>{parts[1]}-${parts[0]}`);
   }
   return new Date(0);
 };
@@ -87,8 +87,8 @@ function App() {
       }
       const data = await response.json();
       const sortedData = data.sort((a, b) => {
-        const dateA = parseDateString(a.Data_de_Incluso);
-        const dateB = parseDateString(b.Data_de_Incluso);
+        const dateA = parseDateString(a.data_de_incluso); // CORRIGIDO para chave do backend
+        const dateB = parseDateString(b.data_de_incluso); // CORRIGIDO para chave do backend
         return dateB.getTime() - dateA.getTime();
       });
       setEstagios(sortedData);
@@ -104,13 +104,13 @@ function App() {
 
   const estagiosFiltrados = useMemo(() => {
     return estagios.filter((estagio) => {
-      const dataInclusao = String(estagio.Data_de_Incluso || "").toLowerCase();
-      const area = String(estagio.Area || "").toLowerCase();
-      const empresa = String(estagio.Empresa || "").toLowerCase();
-      const cidade = String(estagio.Cidade || "").toLowerCase();
-      const tituloVaga = String(estagio.Titulo_da_Vaga || "").toLowerCase();
-      const tipoVaga = String(estagio.Tipo_de_Vaga || "").toLowerCase();
-      const plataforma = String(estagio.Plataforma || "").toLowerCase();
+      const dataInclusao = String(estagio.data_de_incluso || "").toLowerCase(); // CORRIGIDO
+      const area = String(estagio.area || "").toLowerCase(); // CORRIGIDO
+      const empresa = String(estagio.empresa || "").toLowerCase(); // CORRIGIDO
+      const cidade = String(estagio.cidade || "").toLowerCase(); // CORRIGIDO
+      const tituloVaga = String(estagio.titulo_da_vaga || "").toLowerCase(); // CORRIGIDO
+      const tipoVaga = String(estagio.tipo_de_vaga || "").toLowerCase(); // CORRIGIDO
+      const plataforma = String(estagio.plataforma || "").toLowerCase(); // CORRIGIDO
 
       const checkFilter = (value, filter) =>
         !filter || value.includes(filter.toLowerCase());
@@ -200,41 +200,39 @@ function App() {
       <div className="lista-estagios" ref={listRef}>
         {estagiosFiltrados.map((estagio, index) => (
           <div
-            key={estagio.Link || `estagio-${index}`}
+            key={estagio.link || `estagio-${index}`} // CORRIGIDO
             className="estagio-card"
           >
             <h2>
-              {estagio.Titulo_da_Vaga ||
-                estagio.Titulo_da_Vaga_Text ||
-                "Título não disponível"}
+              {estagio.titulo_da_vaga || "Título não disponível"} 
             </h2>
             <p>
-              <strong>Empresa:</strong> {estagio.Empresa || "Não informado"}
+              <strong>Empresa:</strong> {estagio.empresa || "Não informado"}
             </p>
             <p>
-              <strong>Localização:</strong> {estagio.Cidade || "Não informado"}
+              <strong>Localização:</strong> {estagio.cidade || "Não informado"}
             </p>
             <p>
-              <strong>Área:</strong> {estagio.Area || "Não informado"}
+              <strong>Área:</strong> {estagio.area || "Não informado"}
             </p>
             <p>
               <strong>Tipo de Vaga:</strong>{" "}
-              {estagio.Tipo_de_Vaga || "Não informado"}
+              {estagio.tipo_de_vaga || "Não informado"}
             </p>
             <p>
               <strong>Plataforma:</strong>{" "}
-              {estagio.Plataforma || "Não informado"}
+              {estagio.plataforma || "Não informado"}
             </p>
             <p>
               <strong>Data de Inclusão:</strong>{" "}
-              {estagio.Data_de_Incluso || "Não informado"}
+              {estagio.data_de_incluso || "Não informado"}
             </p>
-            {estagio.Link && (
+            {estagio.link && ( // CORRIGIDO
               <button
                 type="button"
                 className="ver-vaga-button"
                 onClick={() =>
-                  window.open(estagio.Link, "_blank", "noopener,noreferrer")
+                  window.open(estagio.link, "_blank", "noopener,noreferrer") // CORRIGIDO
                 }
               >
                 Ver Vaga
@@ -270,45 +268,3 @@ function App() {
             value={filtroEmpresa}
             onChange={(e) => setFiltroEmpresa(e.target.value)}
           />
-          <input
-            type="text"
-            placeholder="Cidade (Ex: São Paulo)"
-            value={filtroCidade}
-            onChange={(e) => setFiltroCidade(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Título da Vaga"
-            value={filtroTituloVaga}
-            onChange={(e) => setFiltroTituloVaga(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Tipo (Ex: Estágio)"
-            value={filtroTipoVaga}
-            onChange={(e) => setFiltroTipoVaga(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Plataforma"
-            value={filtroPlataforma}
-            onChange={(e) => setFiltroPlataforma(e.target.value)}
-          />
-          <button
-            type="button"
-            onClick={fetchEstagios}
-            className="primary-action-button filtros-atualizar-btn"
-            disabled={loading && estagios.length > 0}
-          >
-            {loading && estagios.length > 0
-              ? "Atualizando..."
-              : "Atualizar Vagas"}
-          </button>
-        </div>
-        {renderConteudoPrincipal()}
-      </div>
-    </>
-  );
-}
-
-export default App;
